@@ -91,6 +91,7 @@ class TFRecordDataset:
         max_shape = max(tfr_shapes, key=np.prod)
         self.resolution = resolution if resolution is not None else max_shape[1]
         self.resolution_log2 = int(np.log2(self.resolution))
+
         self.shape = [max_shape[0], self.resolution, self.resolution]
         tfr_lods = [self.resolution_log2 - int(np.log2(shape[1])) for shape in tfr_shapes]
         assert all(shape[0] == max_shape[0] for shape in tfr_shapes)
@@ -232,6 +233,7 @@ def load_dataset(class_name='training.dataset.TFRecordDataset', data_dir=None, v
     if verbose:
         print('Streaming data using %s...' % class_name)
     dataset = dnnlib.util.get_obj_by_name(class_name)(**adjusted_kwargs)
+
     if verbose:
         print('Dataset shape =', np.int32(dataset.shape).tolist())
         print('Dynamic range =', dataset.dynamic_range)

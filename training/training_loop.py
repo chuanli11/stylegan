@@ -20,6 +20,9 @@ from training import dataset
 from training import misc
 from metrics import metric_base
 
+
+import sys
+
 #----------------------------------------------------------------------------
 # Just-in-time processing of training images before feeding them to the networks.
 
@@ -57,8 +60,9 @@ def training_schedule(
     training_set,
     num_gpus,
     lod_initial_resolution  = 4,        # Image resolution used at the beginning.
-    lod_training_kimg       = 600,      # Thousands of real images to show before doubling the resolution.
-    lod_transition_kimg     = 600,      # Thousands of real images to show when fading in new layers.
+    # lod_training_kimg       = 0.512,      # Thousands of real images to show before doubling the resolution.
+    lod_training_kimg       = 1.024,
+    lod_transition_kimg     = 0,      # Thousands of real images to show when fading in new layers.
     minibatch_base          = 16,       # Maximum minibatch size, divided evenly among GPUs.
     minibatch_dict          = {},       # Resolution-specific overrides.
     max_minibatch_per_gpu   = {},       # Resolution-specific maximum minibatch size per GPU.
@@ -68,7 +72,9 @@ def training_schedule(
     D_lrate_dict            = {},       # Resolution-specific overrides.
     lrate_rampup_kimg       = 0,        # Duration of learning rate ramp-up.
     tick_kimg_base          = 160,      # Default interval of progress snapshots.
-    tick_kimg_dict          = {4: 160, 8:140, 16:120, 32:100, 64:80, 128:60, 256:40, 512:30, 1024:20}): # Resolution-specific overrides.
+    tick_kimg_dict          = {4:0.512, 8:0.512, 16:0.512, 32:0.512, 64:0.512, 128:0.512, 256:0.512, 512:0.512, 1024:0.512}):
+    # tick_kimg_dict          = {4:1.024, 8:1.024, 16:1.024, 32:1.024, 64:1.024, 128:1.024, 256:1.024, 512:1.024, 1024:1.024}):
+    # tick_kimg_dict          = {4: 160, 8:140, 16:120, 32:100, 64:80, 128:60, 256:40, 512:30, 1024:20}): # Resolution-specific overrides.
 
     # Initialize result dict.
     s = dnnlib.EasyDict()
@@ -86,6 +92,7 @@ def training_schedule(
     if lod_transition_kimg > 0:
         s.lod -= max(phase_kimg - lod_training_kimg, 0.0) / lod_transition_kimg
     s.lod = max(s.lod, 0.0)
+
     s.resolution = 2 ** (training_set.resolution_log2 - int(np.floor(s.lod)))
 
     # Minibatch size.
@@ -189,11 +196,13 @@ def training_loop(
         try:
             peak_gpu_mem_op = tf.contrib.memory_stats.MaxBytesInUse()
         except tf.errors.NotFoundError:
-            peak_gpu_mem_op = tf.constant(0)
+            peak_gpu_mem_op = tf.constant(0)    
 
     print('Setting up snapshot image grid...')
     grid_size, grid_reals, grid_labels, grid_latents = misc.setup_snapshot_image_grid(G, training_set, **grid_args)
+
     sched = training_schedule(cur_nimg=total_kimg*1000, training_set=training_set, num_gpus=submit_config.num_gpus, **sched_args)
+
     grid_fakes = Gs.run(grid_latents, grid_labels, is_validation=True, minibatch_size=sched.minibatch//submit_config.num_gpus)
 
     print('Setting up run dir...')
@@ -214,10 +223,13 @@ def training_loop(
     tick_start_nimg = cur_nimg
     prev_lod = -1.0
     while cur_nimg < total_kimg * 1000:
+
         if ctx.should_stop(): break
 
         # Choose training parameters and configure training ops.
         sched = training_schedule(cur_nimg=cur_nimg, training_set=training_set, num_gpus=submit_config.num_gpus, **sched_args)
+        # print(sched)
+
         training_set.configure(sched.minibatch // submit_config.num_gpus, sched.lod)
         if reset_opt_for_new_lod:
             if np.floor(sched.lod) != np.floor(prev_lod) or np.ceil(sched.lod) != np.ceil(prev_lod):
@@ -241,27 +253,23 @@ def training_loop(
             total_time = ctx.get_time_since_start() + resume_time
 
             # Report progress.
-            print('tick %-5d kimg %-8.1f lod %-5.2f minibatch %-4d time %-12s sec/tick %-7.1f sec/kimg %-7.2f maintenance %-6.1f gpumem %-4.1f' % (
-                autosummary('Progress/tick', cur_tick),
-                autosummary('Progress/kimg', cur_nimg / 1000.0),
-                autosummary('Progress/lod', sched.lod),
-                autosummary('Progress/minibatch', sched.minibatch),
-                dnnlib.util.format_time(autosummary('Timing/total_sec', total_time)),
-                autosummary('Timing/sec_per_tick', tick_time),
-                autosummary('Timing/sec_per_kimg', tick_time / tick_kimg),
-                autosummary('Timing/maintenance_sec', maintenance_time),
-                autosummary('Resources/peak_gpu_mem_gb', peak_gpu_mem_op.eval() / 2**30)))
+
+            p_tick = autosummary('Progress/tick', cur_tick)
+            p_kimg =     autosummary('Progress/kimg', cur_nimg / 1000.0)
+            p_lod =  autosummary('Progress/lod', sched.lod)
+            p_minibatch = autosummary('Progress/minibatch', sched.minibatch)
+            p_time = dnnlib.util.format_time(autosummary('Timing/total_sec', total_time))
+            p_sectick = autosummary('Timing/sec_per_tick', tick_time)
+            p_seckimg = autosummary('Timing/sec_per_kimg', tick_time / tick_kimg)
+            p_maintenance = autosummary('Timing/maintenance_sec', maintenance_time)
+            p_gpumem = autosummary('Resources/peak_gpu_mem_gb', peak_gpu_mem_op.eval() / 2**30)
+
+            if cur_tick % 2 == 0:
+                print('tick %-5d kimg %-8.1f lod %-5.2f minibatch %-4d time %-12s sec/tick %-7.1f sec/kimg %-7.2f maintenance %-6.1f gpumem %-4.1f' % (
+                    p_tick, p_kimg, p_lod, p_minibatch, p_time, p_sectick, p_seckimg, p_maintenance, p_gpumem))
+
             autosummary('Timing/total_hours', total_time / (60.0 * 60.0))
             autosummary('Timing/total_days', total_time / (24.0 * 60.0 * 60.0))
-
-            # Save snapshots.
-            if cur_tick % image_snapshot_ticks == 0 or done:
-                grid_fakes = Gs.run(grid_latents, grid_labels, is_validation=True, minibatch_size=sched.minibatch//submit_config.num_gpus)
-                misc.save_image_grid(grid_fakes, os.path.join(submit_config.run_dir, 'fakes%06d.png' % (cur_nimg // 1000)), drange=drange_net, grid_size=grid_size)
-            if cur_tick % network_snapshot_ticks == 0 or done or cur_tick == 1:
-                pkl = os.path.join(submit_config.run_dir, 'network-snapshot-%06d.pkl' % (cur_nimg // 1000))
-                misc.save_pkl((G, D, Gs), pkl)
-                metrics.run(pkl, run_dir=submit_config.run_dir, num_gpus=submit_config.num_gpus, tf_config=tf_config)
 
             # Update summaries and RunContext.
             metrics.update_autosummaries()
