@@ -61,7 +61,8 @@ def training_schedule(
     num_gpus,
     lod_initial_resolution  = 4,        # Image resolution used at the beginning.
     # lod_training_kimg       = 0.512,      # Thousands of real images to show before doubling the resolution.
-    lod_training_kimg       = 1.024,
+    # lod_training_kimg       = 1.024,
+    lod_training_kimg       = 0.128,
     lod_transition_kimg     = 0,      # Thousands of real images to show when fading in new layers.
     minibatch_base          = 16,       # Maximum minibatch size, divided evenly among GPUs.
     minibatch_dict          = {},       # Resolution-specific overrides.
@@ -72,7 +73,8 @@ def training_schedule(
     D_lrate_dict            = {},       # Resolution-specific overrides.
     lrate_rampup_kimg       = 0,        # Duration of learning rate ramp-up.
     tick_kimg_base          = 160,      # Default interval of progress snapshots.
-    tick_kimg_dict          = {4:0.512, 8:0.512, 16:0.512, 32:0.512, 64:0.512, 128:0.512, 256:0.512, 512:0.512, 1024:0.512}):
+    tick_kimg_dict          = {256:0.064, 512:0.064, 1024:0.064}):
+    # tick_kimg_dict          = {4:0.512, 8:0.512, 16:0.512, 32:0.512, 64:0.512, 128:0.512, 256:0.512, 512:0.512, 1024:0.512}):
     # tick_kimg_dict          = {4:1.024, 8:1.024, 16:1.024, 32:1.024, 64:1.024, 128:1.024, 256:1.024, 512:1.024, 1024:1.024}):
     # tick_kimg_dict          = {4: 160, 8:140, 16:120, 32:100, 64:80, 128:60, 256:40, 512:30, 1024:20}): # Resolution-specific overrides.
 
@@ -267,6 +269,7 @@ def training_loop(
             if cur_tick % 2 == 0:
                 print('tick %-5d kimg %-8.1f lod %-5.2f minibatch %-4d time %-12s sec/tick %-7.1f sec/kimg %-7.2f maintenance %-6.1f gpumem %-4.1f' % (
                     p_tick, p_kimg, p_lod, p_minibatch, p_time, p_sectick, p_seckimg, p_maintenance, p_gpumem))
+                print(sched)
 
             autosummary('Timing/total_hours', total_time / (60.0 * 60.0))
             autosummary('Timing/total_days', total_time / (24.0 * 60.0 * 60.0))
