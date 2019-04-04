@@ -111,6 +111,7 @@ Throughput (samples/sec)
 Highest-quality StyleGAN (configuration F in Table 1) for the FFHQ dataset at 1024×1024 resolution 
 
 GPU: Titan RTX
+
 | GPUs | 1024&times;1024  | 512&times;512    | 256&times;256    |
 | :--- | :--------------  | :------------    | :------------    |
 | 1    | 49 days 8 hours | 29 days 21 hours | 17 days 22 hours |
