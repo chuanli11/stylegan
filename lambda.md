@@ -38,9 +38,9 @@ Training
 CUDA_VISIBLE_DEVICES=0 python train.py
 ```
 
-Resolution 256 x 256 
+**Resolution 256 x 256**
 
-**Memory Requirement (MiB)**
+Memory Requirement (MiB)
 
 | Batch Size  | Memory  |
 |---|---|
@@ -50,7 +50,7 @@ Resolution 256 x 256
 | bs=32 | 24GB  |
 | bs=64 | 48GB  |
 
-**Throughput (samples/sec)** 
+Throughput (samples/sec)
 
 |   | 2060  | 2070  | 2080  |  1080 Ti | 2080 Ti | TitanRTX | Quadro RTX 6000 | V100 | Quadro RTX 8000 |
 |---|---|---|---|---|---|---|---|---|---|
@@ -60,9 +60,9 @@ Resolution 256 x 256
 | bs=32  | OOM | OOM  | OOM | OOM | OOM  | 17.12  | 14.85  |   | 16.55  |
 | bs=64  | OOM | OOM  | OOM | OOM  |  OOM |  OOM | OOM  |   | 16.66  |
 
-Resolution 512 x 512 
+**Resolution 512 x 512**
 
-**Memory Requirement (MiB)**
+Memory Requirement (MiB)
 
 | Batch Size  | Memory  |
 |---|---|
@@ -72,7 +72,7 @@ Resolution 512 x 512
 | bs=16  | 24GB  |
 | bs=32  | 48GB  |
 
-**Throughput (samples/sec)** 
+Throughput (samples/sec)
 
 |   | 2060  | 2070  | 2080  |  1080 Ti | 2080 Ti | TitanRTX | Quadro RTX 6000 | V100 | Quadro RTX 8000 |
 |---|---|---|---|---|---|---|---|---|---|
@@ -83,9 +83,9 @@ Resolution 512 x 512
 | bs=32  | OOM  | OOM  | OOM  |  OOM | OOM | OOM | OOM  |   | 9.36  |
 
 
-Resolution 1024 x 1024 
+**Resolution 1024 x 1024** 
 
-**Memory Requirement (MiB)**
+Memory Requirement (MiB)
 
 | Batch Size  | Memory  |
 |---|---|
@@ -96,7 +96,7 @@ Resolution 1024 x 1024
 | bs=16  | 48GB  |
 
 
-**Throughput (samples/sec)** 
+Throughput (samples/sec)
 
 |   | 2060  | 2070  | 2080  |  1080 Ti | 2080 Ti | TitanRTX | Quadro RTX 6000 | V100 | Quadro RTX 8000 |
 |---|---|---|---|---|---|---|---|---|---|
@@ -105,3 +105,15 @@ Resolution 1024 x 1024
 | bs=4  |  OOM | OOM  | OOM  | 2.97 | 4.22  |  4.76 | 4.03  |   | 4.53  |
 | bs=8  |  OOM | OOM  | OOM  | OOM  |  OOM | 4.94  | 4.25  |   | 4.70  |
 | bs=16  | OOM  | OOM  | OOM  |  OOM | OOM |  OOM | OOM  |   | 4.96  |
+
+**Time Cost**
+
+Highest-quality StyleGAN (configuration F in Table 1) for the FFHQ dataset at 1024×1024 resolution 
+
+GPU: Titan RTX
+| GPUs | 1024&times;1024  | 512&times;512    | 256&times;256    |
+| :--- | :--------------  | :------------    | :------------    |
+| 1    | 49 days 8 hours | 29 days 21 hours | 17 days 22 hours |
+| 2    | 26 days 7 hours | 15 days 23 hours  | 11 days 1 hours   |
+| 4    | 13 days 14 hours  | 8 days 21 hours   | 5 days 21 hours  |
+| 8    | 7 days 22 hours  | 5 days 7 hours  | 4 days 1 hours   |
