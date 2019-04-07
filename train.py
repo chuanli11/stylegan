@@ -37,11 +37,11 @@ if 1:
     desc += '-ffhq';     dataset = EasyDict(tfrecord_dir='ffhq');                 train.mirror_augment = True
 
     # Number of GPUs.
-    desc += '-1gpu'; submit_config.num_gpus = 1; sched.minibatch_base = 4; sched.minibatch_dict = {256: 4, 512: 2, 1024:1}
-    # desc += '-1gpu'; submit_config.num_gpus = 1; sched.minibatch_base = 4; sched.minibatch_dict = {256: 8, 512: 4, 1024:2}
-    # desc += '-1gpu'; submit_config.num_gpus = 1; sched.minibatch_base = 4; sched.minibatch_dict = {256: 16, 512: 8, 1024:4}
-    # desc += '-1gpu'; submit_config.num_gpus = 1; sched.minibatch_base = 4; sched.minibatch_dict = {256: 32, 512: 16, 1024:8}
-    # desc += '-1gpu'; submit_config.num_gpus = 1; sched.minibatch_base = 4; sched.minibatch_dict = {256: 64, 512: 32, 1024:16}
+    #desc += '-1gpu'; submit_config.num_gpus = 1; sched.minibatch_base = 4; sched.minibatch_dict = {256: 4, 512: 2, 1024:1}
+    #desc += '-1gpu'; submit_config.num_gpus = 1; sched.minibatch_base = 4; sched.minibatch_dict = {256: 8, 512: 4, 1024:2}
+    #desc += '-1gpu'; submit_config.num_gpus = 1; sched.minibatch_base = 4; sched.minibatch_dict = {256: 16, 512: 8, 1024:4}
+    #desc += '-1gpu'; submit_config.num_gpus = 1; sched.minibatch_base = 4; sched.minibatch_dict = {256: 32, 512: 16, 1024:8}
+    desc += '-1gpu'; submit_config.num_gpus = 1; sched.minibatch_base = 4; sched.minibatch_dict = {256: 64, 512: 32, 1024:16}
 
     # Default options.
     train.total_kimg = 9.216
